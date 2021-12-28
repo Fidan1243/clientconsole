@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ConsoleApp1;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -20,6 +22,7 @@ namespace ConsoleApp3
             server.Bind(new IPEndPoint(IPAddress.Parse(NetworkHelpers.Class1.IP), int.Parse(NetworkHelpers.Class1.Port)));
             server.Listen(5);
             server.BeginAccept(AcceptCallBack, null);
+            Console.ReadLine();
         }
 
         private static void AcceptCallBack(IAsyncResult ar)
@@ -55,17 +58,28 @@ namespace ConsoleApp3
             }
             byte[] recbuffer = new byte[received];
             Array.Copy(buffer, recbuffer, received);
-            string text = Encoding.ASCII.GetString(recbuffer);
-            Console.WriteLine("Received request: ",text);
+            var jsonst = Encoding.ASCII.GetString(recbuffer);
+            var us = JsonConvert.DeserializeObject<User>(jsonst);
+            Console.WriteLine(us.Name);
+            Console.WriteLine(us.Surname);
+            Console.WriteLine(us.Age);
+            Console.WriteLine(us.Message);
+            Console.WriteLine("Received request: ",jsonst);
 
-            if (text.ToLower() == "get-time")
+            if (jsonst.ToLower() != String.Empty)
             {
-                byte[] data = Encoding.ASCII.GetBytes(DateTime.Now.ToLongTimeString());
+                byte[] data = Encoding.ASCII.GetBytes(jsonst);
                 current.Send(data);
-                Console.WriteLine("Time sent to the client");
+                foreach (var item in clientsockets)
+                {
+                    if (item.RemoteEndPoint != current.RemoteEndPoint)
+                    {
+                        current.Send(data);
+                    }
+                }
 
             }
-            else if (text.ToLower() == "exit")
+            else if (jsonst.ToLower() == "exit")
             {
                 current.Shutdown(SocketShutdown.Both);
                 current.Close();

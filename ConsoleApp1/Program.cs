@@ -1,4 +1,5 @@
 ﻿using ConsoleApp3.NetworkHelpers;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace ConsoleApp1
     class Program
     {
         private static Socket Client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
+        public static User User { get; set; } = new User() { Name = "123",Surname = "null",Age = 34 };
         static void Main(string[] args)
         {
             Console.Title = "Client";
@@ -30,7 +31,9 @@ namespace ConsoleApp1
 
         private static void SendString(string v)
         {
-            byte[] buffer = Encoding.ASCII.GetBytes(v);
+            User.Message = v;
+            var jsonst = JsonConvert.SerializeObject(User);
+            byte[] buffer = Encoding.ASCII.GetBytes(jsonst);
             Client.Send(buffer, 0, buffer.Length, SocketFlags.None);
         }
 
